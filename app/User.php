@@ -87,6 +87,45 @@ public function feed_microposts()
         return Micropost::whereIn('user_id', $follow_user_ids);
     }
     
+    public function favorites()
+    {
+        return $this->belongsToMany(User::class, 'favorite', 'user_id', 'favorite_id' )->withTimestamps();
+    }
+    
+public function favorite($userId)
+{
+    // 既にフォローしているかの確認
+    $exist = $this->is_favorite($userId);
+
+    if ($exist || $its_me) {
+        // 既にフォローしていれば何もしない
+        return false;
+    } else {
+        // 未フォローであればフォローする
+        $this->favorites()->attach($userId);
+        return true;
+    }
+}
+
+public function unfavorite($userId)
+{
+    // 既にフォローしているかの確認
+    $exist = $this->is_favorite($userId);
+
+    if ($exist && !$its_me) {
+        // 既にフォローしていればフォローを外す
+        $this->favorites()->detach($userId);
+        return true;
+    } else {
+        // 未フォローであれば何もしない
+        return false;
+    }
+}
+
+public function is_favorite($userId) {
+    return $this->favorites()->where('favorite_id', $userId)->exists();
+}
+    
 }
 
 
